@@ -54,6 +54,7 @@ resource "aws_s3_bucket_website_configuration" "resume_website" {
 locals {
   website_domain = "resume.nattapol.com"
   root_object    = "resume.html"
+  database_name  = "nattapol-resume"
 }
 
 data "aws_cloudfront_cache_policy" "caching_optimized" {
@@ -113,5 +114,17 @@ resource "aws_cloudfront_distribution" "resume_website" {
   }
   tags_all = {
     "Name" = local.website_domain
+  }
+}
+
+# DynamoDB
+
+resource "aws_dynamodb_table" "nattapol-resume" {
+  name         = local.database_name
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "stats"
+  attribute {
+    name = "stats"
+    type = "S"
   }
 }
