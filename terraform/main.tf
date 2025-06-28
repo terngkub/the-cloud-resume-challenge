@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.16"
+      version = ">= 5.83.0"
     }
   }
   backend "s3" {
@@ -18,8 +18,7 @@ terraform {
 # Providers
 
 provider "aws" {
-  region                 = "ap-southeast-7"
-  skip_region_validation = true
+  region = "ap-southeast-7"
 }
 
 # Imported certificate has to be in us-east-1 for CloudFront
