@@ -137,6 +137,9 @@ resource "aws_dynamodb_table" "visitor_counter" {
 locals {
   lambda_function_name = "crc-visitor-counter"
   lambda_iam_role_name = "crc-visitor-counter-role"
+  lambda_file_name     = "visitor_counter.zip"
+  lambda_runtime       = "python3.13"
+  lambda_handler       = "main.lambda_handler"
 }
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
@@ -200,4 +203,29 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
       }
     ]
   })
+}
+
+resource "aws_s3_bucket" "crc" {
+  bucket = "nattapol-crc"
+}
+
+resource "aws_s3_bucket_versioning" "crc" {
+  bucket = aws_s3_bucket.crc.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "visitor_counter" {
+  bucket = aws_s3_bucket.crc.id
+  key    = local.lambda_file_name
+}
+
+resource "aws_lambda_function" "visitor_counter" {
+  function_name = local.lambda_function_name
+  role          = aws_iam_role.lambda_visitor_counter.arn
+  s3_bucket     = aws_s3_bucket.crc.id
+  s3_key        = local.lambda_file_name
+  runtime       = local.lambda_runtime
+  handler       = local.lambda_handler
 }
