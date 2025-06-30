@@ -53,7 +53,6 @@ resource "aws_s3_bucket_website_configuration" "resume_website" {
 locals {
   website_domain = "resume.nattapol.com"
   root_object    = "resume.html"
-  database_name  = "nattapol-resume"
 }
 
 data "aws_cloudfront_cache_policy" "caching_optimized" {
@@ -118,12 +117,87 @@ resource "aws_cloudfront_distribution" "resume_website" {
 
 # DynamoDB
 
-resource "aws_dynamodb_table" "nattapol-resume" {
-  name         = local.database_name
+# TODO change the name to something better
+locals {
+  dynamodb_table_name = "nattapol-resume"
+}
+
+resource "aws_dynamodb_table" "visitor_counter" {
+  name         = local.dynamodb_table_name
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "stats"
   attribute {
     name = "stats"
     type = "S"
   }
+}
+
+# Lambda
+
+locals {
+  lambda_function_name = "crc-visitor-counter"
+  lambda_iam_role_name = "crc-visitor-counter-role"
+}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "lambda_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "lambda_visitor_counter" {
+  name               = local.lambda_iam_role_name
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+}
+
+resource "aws_iam_role_policy" "lambda_cloudwatch_logs" {
+  name = "CloudWatchLog"
+  role = aws_iam_role.lambda_visitor_counter.name
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem",
+        ]
+        Effect   = "Allow"
+        Resource = aws_dynamodb_table.visitor_counter.arn
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "lambda_dynamodb" {
+  name = "DynamoDB"
+  role = aws_iam_role.lambda_visitor_counter.name
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        "Effect" : "Allow",
+        "Action" : "logs:CreateLogGroup",
+        "Resource" : "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
+      },
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource" : [
+          "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.lambda_function_name}:*"
+        ]
+      }
+    ]
+  })
 }
