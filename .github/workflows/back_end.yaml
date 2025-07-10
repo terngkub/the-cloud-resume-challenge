@@ -16,7 +16,7 @@ jobs:
       - name: Zip files
         run: |
           cd api
-          zip -r ../visitor_counter.zip main.py
+          zip -r ../visitor_counter.zip *
           cd ..
       - name: List file
         run: ls -la
