@@ -44,7 +44,7 @@ resource "aws_s3_bucket_website_configuration" "resume_website" {
   bucket = aws_s3_bucket.resume_website.id
 
   index_document {
-    suffix = "resume.html"
+    suffix = "index.html"
   }
 }
 
@@ -52,7 +52,7 @@ resource "aws_s3_bucket_website_configuration" "resume_website" {
 
 locals {
   website_domain = "resume.nattapol.com"
-  root_object    = "resume.html"
+  root_object    = "index.html"
 }
 
 data "aws_cloudfront_cache_policy" "caching_optimized" {
