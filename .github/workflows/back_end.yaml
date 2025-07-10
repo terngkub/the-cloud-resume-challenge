@@ -23,6 +23,6 @@ jobs:
           role-to-assume: arn:aws:iam::508972673429:role/crc-github-actions
           aws-region: ap-southeast-7
       - name: Sync files to S3
-        run: aws s3 sync visitor_counter.zip s3://nattapol-crc --delete
+        run: aws s3 cp visitor_counter.zip s3://nattapol-crc
       - name: Updata Lambda
         run: aws lambda update-function-code --function-name crc-visitor-counter --s3-bucket nattapol-crc --s3-key visitor_counter.zip --publish
