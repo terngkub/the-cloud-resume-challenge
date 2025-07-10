@@ -14,7 +14,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Zip files
-        run: zip -r visitor_counter.zip api
+        run: |
+          cd api
+          zip -r ../visitor_counter.zip main.py
+          cd ..
       - name: List file
         run: ls -la
       - name: Configure AWS credentials
