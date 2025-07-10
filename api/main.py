@@ -2,6 +2,9 @@ import json
 import boto3
 
 
+# Test merge
+
+
 def lambda_handler(event, context):
     dynamodb = boto3.resource("dynamodb")
     table = dynamodb.Table("nattapol-resume")
