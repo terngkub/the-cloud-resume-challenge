@@ -1,22 +1,26 @@
-name: Front-end
+name: Back-end
 on:
   workflow_dispatch:
   push:
     paths:
-      - 'website/**'
+      - 'api/**'
 permissions:
   id-token: write
   contents: read
 jobs:
-  Deploy:
+  Build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Zip files
+        run: zip -r visitor_counter.zip api
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::508972673429:role/crc-github-actions
           aws-region: ap-southeast-7
       - name: Sync files to S3
-        run: aws s3 sync website s3://resume.nattapol.com --delete
+        run: aws s3 sync website s3://nattapol-crc --delete
+      - name: Updata Lambda
+        run: aws lambda upadte-function-code --function-name crc-github-actions --s3-bucket nattapol-crc --s3-key visitor_counter.zip --publish
