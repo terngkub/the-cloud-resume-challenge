@@ -4,8 +4,6 @@ on:
   push:
     paths:
       - resume
-    branches:
-      - "**"
 permissions:
   id-token: write
   contents: read
