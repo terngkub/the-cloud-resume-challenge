@@ -1,8 +1,11 @@
 name: Front-end
 on:
+  workflow_dispatch:
   push:
     paths:
       - resume
+    branches:
+      - "**"
 permissions:
   id-token: write
   contents: read
