@@ -1,0 +1,23 @@
+name: Front-end
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - resume
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::508972673429:role/crc-github-actions
+          aws-region: ap-southeast-7
+      - name: Sync files to S3
+        run: |
+          aws s3 sync resume s3://resume.nattapol.com --delete
