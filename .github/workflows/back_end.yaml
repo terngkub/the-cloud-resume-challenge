@@ -23,4 +23,4 @@ jobs:
       - name: Sync files to S3
         run: aws s3 sync website s3://nattapol-crc --delete
       - name: Updata Lambda
-        run: aws lambda upadte-function-code --function-name crc-github-actions --s3-bucket nattapol-crc --s3-key visitor_counter.zip --publish
+        run: aws lambda update-function-code --function-name crc-github-actions --s3-bucket nattapol-crc --s3-key visitor_counter.zip --publish
