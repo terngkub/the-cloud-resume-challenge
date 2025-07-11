@@ -1,36 +1,7 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 5.83.0"
-    }
-  }
-  backend "s3" {
-    bucket = "nattapol-cloud-resume-challenge-terraform"
-    key    = "terraform.tfstate"
-    region = "ap-southeast-7"
-  }
-
-  required_version = ">= 1.2.0"
-}
-
-
-# Providers
-
-provider "aws" {
-  region = "ap-southeast-7"
-}
-
-# Imported certificate has to be in us-east-1 for CloudFront
-provider "aws" {
-  region = "us-east-1"
-  alias  = "us-east-1"
-}
-
 # S3
 
 resource "aws_s3_bucket" "resume_website" {
-  bucket = "resume.nattapol.com"
+  bucket = var.full_domain_name
 }
 
 resource "aws_s3_bucket_versioning" "resume_website" {
@@ -44,16 +15,11 @@ resource "aws_s3_bucket_website_configuration" "resume_website" {
   bucket = aws_s3_bucket.resume_website.id
 
   index_document {
-    suffix = "index.html"
+    suffix = var.website_index_file
   }
 }
 
 # CloudFront
-
-locals {
-  website_domain = "resume.nattapol.com"
-  root_object    = "index.html"
-}
 
 data "aws_cloudfront_cache_policy" "caching_optimized" {
   name = "Managed-CachingOptimized"
@@ -61,11 +27,11 @@ data "aws_cloudfront_cache_policy" "caching_optimized" {
 
 data "aws_acm_certificate" "resume_website" {
   provider = aws.us-east-1
-  domain   = "nattapol.com"
+  domain   = var.root_domain_name
 }
 
 resource "aws_cloudfront_origin_access_control" "resume_website" {
-  name                              = local.website_domain
+  name                              = var.full_domain_name
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -75,19 +41,19 @@ resource "aws_cloudfront_distribution" "resume_website" {
   origin {
     domain_name              = aws_s3_bucket.resume_website.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.resume_website.id
-    origin_id                = local.website_domain
+    origin_id                = var.full_domain_name
   }
 
   enabled             = true
   is_ipv6_enabled     = true
   http_version        = "http2and3"
-  default_root_object = local.root_object
-  aliases             = [local.website_domain]
+  default_root_object = var.website_index_file
+  aliases             = [var.full_domain_name]
 
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = local.website_domain
+    target_origin_id       = var.full_domain_name
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = data.aws_cloudfront_cache_policy.caching_optimized.id
     compress               = true
@@ -108,10 +74,10 @@ resource "aws_cloudfront_distribution" "resume_website" {
   }
 
   tags = {
-    "Name" = local.website_domain
+    "Name" = var.full_domain_name
   }
   tags_all = {
-    "Name" = local.website_domain
+    "Name" = var.full_domain_name
   }
 }
 
