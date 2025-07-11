@@ -4,7 +4,7 @@ import boto3
 
 def lambda_handler(event, context):
     dynamodb = boto3.resource("dynamodb")
-    table = dynamodb.Table("nattapol-resume")
+    table = dynamodb.Table("crc-prod-visitor-counter-591abf3b")
     response = table.update_item(
         Key={"stats": "visitor-counter"},
         UpdateExpression="ADD #count :val",
