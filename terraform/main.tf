@@ -214,6 +214,12 @@ resource "aws_lambda_function" "visitor_counter" {
   s3_key        = var.lambda_file_name
   runtime       = var.lambda_runtime
   handler       = var.lambda_handler
+
+  environment {
+    variables = {
+      DYNAMODB_TABLE_NAME = aws_dynamodb_table.visitor_counter.name
+    }
+  }
 }
 
 # API Gateway
