@@ -83,7 +83,7 @@ resource "aws_cloudfront_distribution" "resume_website" {
 
 # DynamoDB
 
-# TODO change the name to something better
+# TODO random the name
 locals {
   dynamodb_table_name = "nattapol-resume"
 }
@@ -100,13 +100,12 @@ resource "aws_dynamodb_table" "visitor_counter" {
 
 # Lambda
 
+# TODO make it random
 locals {
   lambda_function_name = "crc-visitor-counter"
   lambda_iam_role_name = "crc-visitor-counter-role"
-  lambda_file_name     = "visitor_counter.zip"
-  lambda_runtime       = "python3.13"
-  lambda_handler       = "main.lambda_handler"
 }
+
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
@@ -182,28 +181,30 @@ resource "aws_s3_bucket_versioning" "crc" {
   }
 }
 
+# TODO do I really need this?
 resource "aws_s3_object" "visitor_counter" {
   bucket = aws_s3_bucket.crc.id
-  key    = local.lambda_file_name
+  key    = var.lambda_file_name
 }
 
 resource "aws_lambda_function" "visitor_counter" {
   function_name = local.lambda_function_name
   role          = aws_iam_role.lambda_visitor_counter.arn
   s3_bucket     = aws_s3_bucket.crc.id
-  s3_key        = local.lambda_file_name
-  runtime       = local.lambda_runtime
-  handler       = local.lambda_handler
+  s3_key        = var.lambda_file_name
+  runtime       = var.lambda_runtime
+  handler       = var.lambda_handler
 }
 
 # API Gateway
 
 locals {
   api_path         = "increase-visitor-counter"
-  api_allow_origin = "https://resume.nattapol.com"
+  api_allow_origin = "https://${var.full_domain_name}"
 }
 
 resource "aws_api_gateway_rest_api" "visitor_counter" {
+  # TODO make it random
   name = "crc-visitor-counter"
 
   endpoint_configuration {
@@ -281,7 +282,7 @@ resource "aws_api_gateway_integration_response" "visitor_counter_options" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'https://resume.nattapol.com'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'${local.api_allow_origin}'"
   }
 }
 
