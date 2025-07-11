@@ -81,12 +81,30 @@ resource "aws_cloudfront_distribution" "resume_website" {
   }
 }
 
-# DynamoDB
+# Naming
 
-# TODO random the name
-locals {
-  dynamodb_table_name = "nattapol-resume"
+resource "random_id" "resource_suffix" {
+  byte_length = 4
+  keepers = {
+    env = var.environment
+    project = var.project_name
+  }
 }
+
+locals {
+  prefix = "${var.project_name}-${var.environment}"
+  suffix = random_id.resource_suffix.hex
+  dynamodb_table_name = "${local.prefix}-visitor-counter-${local.suffix}"
+  lambda_function_name = "${local.prefix}-visitor-counter-${local.suffix}" 
+  lambda_iam_role_name =  "${local.prefix}-visitor-counter-role-${local.suffix}"
+  api_gateway_name =  "${local.prefix}-visitor-counter-${local.suffix}"
+}
+
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+
+# DynamoDB
 
 resource "aws_dynamodb_table" "visitor_counter" {
   name         = local.dynamodb_table_name
@@ -99,15 +117,6 @@ resource "aws_dynamodb_table" "visitor_counter" {
 }
 
 # Lambda
-
-# TODO make it random
-locals {
-  lambda_function_name = "crc-visitor-counter"
-  lambda_iam_role_name = "crc-visitor-counter-role"
-}
-
-data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "lambda_assume_role" {
   statement {
@@ -199,13 +208,11 @@ resource "aws_lambda_function" "visitor_counter" {
 # API Gateway
 
 locals {
-  api_path         = "increase-visitor-counter"
   api_allow_origin = "https://${var.full_domain_name}"
 }
 
 resource "aws_api_gateway_rest_api" "visitor_counter" {
-  # TODO make it random
-  name = "crc-visitor-counter"
+  name = local.api_gateway_name
 
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -215,17 +222,7 @@ resource "aws_api_gateway_rest_api" "visitor_counter" {
 resource "aws_api_gateway_resource" "visitor_counter" {
   rest_api_id = aws_api_gateway_rest_api.visitor_counter.id
   parent_id   = aws_api_gateway_rest_api.visitor_counter.root_resource_id
-  path_part   = local.api_path
-}
-
-moved {
-  from = aws_api_gateway_method.visitor_counter
-  to   = aws_api_gateway_method.visitor_counter_post
-}
-
-moved {
-  from = aws_api_gateway_integration.visitor_counter
-  to   = aws_api_gateway_integration.visitor_counter_post
+  path_part   = var.api_path
 }
 
 resource "aws_api_gateway_method" "visitor_counter_post" {

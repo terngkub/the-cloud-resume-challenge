@@ -1,3 +1,16 @@
+# Naming
+
+variable project_name {
+    description = "The name of the project"
+    type = string
+    default = "crc"
+}
+
+variable environment {
+    description = "Environment"
+    type = string
+}
+
 # Domain
 
 variable root_domain_name {
@@ -34,4 +47,12 @@ variable lambda_file_name {
     description = "Zip file name of the visitor counter"
     type = string
     default = "visitor_counter.zip"
+}
+
+# API Gateway
+
+variable api_path {
+    description = "API Gateway path to increase visitor counter"
+    type = string
+    default = "increase-visitor-counter"
 }
