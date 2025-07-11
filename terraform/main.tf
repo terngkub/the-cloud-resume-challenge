@@ -83,21 +83,12 @@ resource "aws_cloudfront_distribution" "resume_website" {
 
 # Naming
 
-resource "random_id" "resource_suffix" {
-  byte_length = 4
-  keepers = {
-    env = var.environment
-    project = var.project_name
-  }
-}
-
 locals {
   prefix = "${var.project_name}-${var.environment}"
-  suffix = random_id.resource_suffix.hex
-  dynamodb_table_name = "${local.prefix}-visitor-counter-${local.suffix}"
-  lambda_function_name = "${local.prefix}-visitor-counter-${local.suffix}" 
-  lambda_iam_role_name =  "${local.prefix}-visitor-counter-role-${local.suffix}"
-  api_gateway_name =  "${local.prefix}-visitor-counter-${local.suffix}"
+  dynamodb_table_name = "${local.prefix}-visitor-counter"
+  lambda_function_name = "${local.prefix}-visitor-counter" 
+  lambda_iam_role_name =  "${local.prefix}-visitor-counter-role"
+  api_gateway_name =  "${local.prefix}-visitor-counter"
 }
 
 data "aws_region" "current" {}
