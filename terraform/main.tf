@@ -116,6 +116,17 @@ resource "aws_dynamodb_table" "visitor_counter" {
   }
 }
 
+resource "aws_dynamodb_table_item" "visitor_counter" {
+  table_name = aws_dynamodb_table.visitor_counter.name
+  hash_key = aws_dynamodb_table.visitor_counter.hash_key
+  item = <<ITEM
+  {
+    "stats": {"S": "visitor-counter"},
+    "count": {"N": "0"}
+  }
+  ITEM
+}
+
 # Lambda
 
 data "aws_iam_policy_document" "lambda_assume_role" {
