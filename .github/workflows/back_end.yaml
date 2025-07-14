@@ -20,7 +20,7 @@ jobs:
       - name: Zip files
         run: |
           cd api
-          zip -r ../${{ env.CODE_ZIP_FILE_NAME }} *
+          zip -r ../${{ env.LAMBDA_ZIP_FILE_NAME }} *
           cd ..
       - name: List file
         run: ls -la
