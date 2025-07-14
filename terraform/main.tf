@@ -116,6 +116,9 @@ resource "aws_dynamodb_table_item" "visitor_counter" {
     "count": {"N": "0"}
   }
   ITEM
+  lifecycle {
+    ignore_changes = [item]
+  }
 }
 
 # Lambda
