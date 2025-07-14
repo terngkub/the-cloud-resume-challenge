@@ -10,13 +10,17 @@ permissions:
 jobs:
   Build:
     runs-on: ubuntu-latest
+    env:
+        LAMBDA_S3_BUCKET_NAME: nattapol-crc-prod-lambda
+        LAMBDA_ZIP_FILE_NAME: visitor_counter.zip
+        LAMBDA_FUNCTION_NAME: crc-prod-visitor-counter
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Zip files
         run: |
           cd api
-          zip -r ../visitor_counter.zip *
+          zip -r ../${{ env.CODE_ZIP_FILE_NAME }} *
           cd ..
       - name: List file
         run: ls -la
@@ -26,6 +30,6 @@ jobs:
           role-to-assume: arn:aws:iam::508972673429:role/crc-github-actions
           aws-region: ap-southeast-7
       - name: Sync files to S3
-        run: aws s3 cp visitor_counter.zip s3://nattapol-crc-prod-lambda
+        run: aws s3 cp ${{ env.LAMBDA_ZIP_FILE_NAME }} s3://${{ env.LAMBDA_S3_BUCKET_NAME }}
       - name: Updata Lambda
-        run: aws lambda update-function-code --function-name crc-prod-visitor-counter --s3-bucket nattapol-crc --s3-key visitor_counter.zip --publish
+        run: aws lambda update-function-code --function-name ${{ env.LAMBDA_FUNCTION_NAME}} --s3-bucket ${{ env.LAMBDA_S3_BUCKET_NAME }} --s3-key ${{ env.LAMBDA_ZIP_FILE_NAME }} --publish
