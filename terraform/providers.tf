@@ -11,7 +11,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "nattapol-cloud-resume-challenge-terraform"
+    bucket = "nattapol-crc-prod-terraform"
     key    = "terraform.tfstate"
     region = "ap-southeast-7"
   }
