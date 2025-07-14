@@ -1,138 +1,21 @@
-# S3
-
-resource "aws_s3_bucket" "resume_website" {
-  bucket = var.full_domain_name
-}
-
-resource "aws_s3_bucket_versioning" "resume_website" {
-  bucket = aws_s3_bucket.resume_website.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_website_configuration" "resume_website" {
-  bucket = aws_s3_bucket.resume_website.id
-
-  index_document {
-    suffix = var.website_index_file
-  }
-}
-
-# CloudFront
-
-data "aws_cloudfront_cache_policy" "caching_optimized" {
-  name = "Managed-CachingOptimized"
-}
-
-data "aws_cloudfront_cache_policy" "caching_disabled" {
-  name = "Managed-CachingDisabled"
-}
+################################################################################
+# Naming and Metadata
+################################################################################
 
 locals {
-  api_gateway_origin_id = replace(aws_api_gateway_stage.visitor_counter.invoke_url, "/^https?://([^/]*).*/", "$1")
-}
-
-data "aws_acm_certificate" "resume_website" {
-  provider = aws.us-east-1
-  domain   = var.root_domain_name
-}
-
-resource "aws_cloudfront_origin_access_control" "resume_website" {
-  name                              = var.full_domain_name
-  origin_access_control_origin_type = "s3"
-  signing_behavior                  = "always"
-  signing_protocol                  = "sigv4"
-}
-
-resource "aws_cloudfront_distribution" "resume_website" {
-  enabled             = true
-  is_ipv6_enabled     = true
-  http_version        = "http2and3"
-  default_root_object = var.website_index_file
-  aliases             = [var.full_domain_name]
-
-  viewer_certificate {
-    cloudfront_default_certificate = false
-    acm_certificate_arn            = data.aws_acm_certificate.resume_website.arn
-    minimum_protocol_version       = "TLSv1.2_2021"
-    ssl_support_method             = "sni-only"
-  }
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
-      locations        = []
-    }
-  }
-
-  tags = {
-    "Name" = var.full_domain_name
-  }
-  tags_all = {
-    "Name" = var.full_domain_name
-  }
-
-  # S3
-
-  origin {
-    domain_name              = aws_s3_bucket.resume_website.bucket_regional_domain_name
-    origin_access_control_id = aws_cloudfront_origin_access_control.resume_website.id
-    origin_id                = var.full_domain_name
-  }
-
-  default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = var.full_domain_name
-    viewer_protocol_policy = "allow-all"
-    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_optimized.id
-    compress               = true
-  }
-
-  # API Gateway
-
-  origin {
-    domain_name = local.api_gateway_origin_id
-    origin_id = local.api_gateway_origin_id
-    
-    custom_origin_config {
-      http_port = 80
-      https_port = 443
-      origin_protocol_policy = "https-only"
-      origin_ssl_protocols = ["TLSv1.2"]
-    }
-  }
-
-  ordered_cache_behavior {
-    path_pattern = "/${aws_api_gateway_stage.visitor_counter.stage_name}/*"
-    target_origin_id = local.api_gateway_origin_id
-    compress = true
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cache_policy_id = data.aws_cloudfront_cache_policy.caching_disabled.id
-    cached_methods = ["GET", "HEAD"]
-  }
-}
-
-# Naming
-
-locals {
-  prefix = "${var.project_name}-${var.environment}"
-  dynamodb_table_name = "${local.prefix}-visitor-counter"
-  lambda_function_name = "${local.prefix}-visitor-counter" 
-  lambda_iam_role_name =  "${local.prefix}-visitor-counter-role"
-  api_gateway_name =  "${local.prefix}-visitor-counter"
+  backend_name = "${var.project_name}-${var.environment}-visitor-counter"
 }
 
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 
+################################################################################
 # DynamoDB
+################################################################################
 
 resource "aws_dynamodb_table" "visitor_counter" {
-  name         = local.dynamodb_table_name
+  name         = local.backend_name
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "stats"
   attribute {
@@ -141,6 +24,7 @@ resource "aws_dynamodb_table" "visitor_counter" {
   }
 }
 
+# Populate the table on the creation
 resource "aws_dynamodb_table_item" "visitor_counter" {
   table_name = aws_dynamodb_table.visitor_counter.name
   hash_key = aws_dynamodb_table.visitor_counter.hash_key
@@ -150,12 +34,55 @@ resource "aws_dynamodb_table_item" "visitor_counter" {
     "count": {"N": "0"}
   }
   ITEM
+
+  # Ignore any changes on the item afterward
   lifecycle {
     ignore_changes = [item]
   }
 }
 
+
+################################################################################
 # Lambda
+################################################################################
+
+resource "aws_lambda_function" "visitor_counter" {
+  function_name = local.backend_name
+  role          = aws_iam_role.lambda_visitor_counter.arn
+  s3_bucket     = aws_s3_bucket.crc.id
+  s3_key        = var.lambda_file_name
+  runtime       = var.lambda_runtime
+  handler       = var.lambda_handler
+
+  environment {
+    variables = {
+      DYNAMODB_TABLE_NAME = aws_dynamodb_table.visitor_counter.name
+    }
+  }
+}
+
+
+# Code
+################################################################################
+
+resource "aws_s3_bucket" "crc" {
+  bucket = "nattapol-crc"
+}
+
+resource "aws_s3_bucket_versioning" "crc" {
+  bucket = aws_s3_bucket.crc.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "visitor_counter" {
+  bucket = aws_s3_bucket.crc.id
+  key    = var.lambda_file_name
+} 
+
+# Permissions
+################################################################################
 
 data "aws_iam_policy_document" "lambda_assume_role" {
   statement {
@@ -171,7 +98,7 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 }
 
 resource "aws_iam_role" "lambda_visitor_counter" {
-  name               = local.lambda_iam_role_name
+  name               = "${local.backend_name}-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
@@ -211,48 +138,20 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
           "logs:PutLogEvents"
         ],
         "Resource" : [
-          "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.lambda_function_name}:*"
+          "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.backend_name}:*"
         ]
       }
     ]
   })
 }
 
-resource "aws_s3_bucket" "crc" {
-  bucket = "nattapol-crc"
-}
 
-resource "aws_s3_bucket_versioning" "crc" {
-  bucket = aws_s3_bucket.crc.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_object" "visitor_counter" {
-  bucket = aws_s3_bucket.crc.id
-  key    = var.lambda_file_name
-}
-
-resource "aws_lambda_function" "visitor_counter" {
-  function_name = local.lambda_function_name
-  role          = aws_iam_role.lambda_visitor_counter.arn
-  s3_bucket     = aws_s3_bucket.crc.id
-  s3_key        = var.lambda_file_name
-  runtime       = var.lambda_runtime
-  handler       = var.lambda_handler
-
-  environment {
-    variables = {
-      DYNAMODB_TABLE_NAME = aws_dynamodb_table.visitor_counter.name
-    }
-  }
-}
-
+################################################################################
 # API Gateway
+################################################################################
 
 resource "aws_api_gateway_rest_api" "visitor_counter" {
-  name = local.api_gateway_name
+  name = local.backend_name
 
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -264,6 +163,9 @@ resource "aws_api_gateway_resource" "visitor_counter" {
   parent_id   = aws_api_gateway_rest_api.visitor_counter.root_resource_id
   path_part   = var.api_path
 }
+
+# POST Method
+################################################################################
 
 resource "aws_api_gateway_method" "visitor_counter_post" {
   rest_api_id   = aws_api_gateway_rest_api.visitor_counter.id
@@ -289,7 +191,9 @@ resource "aws_lambda_permission" "visitor_count_post" {
   source_arn    = "${aws_api_gateway_rest_api.visitor_counter.execution_arn}/*"
 }
 
-## CORS
+
+# OPTIONS Method (for CORS)
+################################################################################
 
 resource "aws_api_gateway_method" "visitor_counter_options" {
   rest_api_id   = aws_api_gateway_rest_api.visitor_counter.id
@@ -340,7 +244,9 @@ resource "aws_api_gateway_method_response" "visitor_counter_options" {
   }
 }
 
-## Deployment
+
+# Deployment and Stage
+################################################################################
 
 resource "aws_api_gateway_deployment" "visitor_counter" {
   rest_api_id = aws_api_gateway_rest_api.visitor_counter.id
