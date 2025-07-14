@@ -349,6 +349,25 @@ resource "aws_api_gateway_method_response" "visitor_counter_options" {
 
 resource "aws_api_gateway_deployment" "visitor_counter" {
   rest_api_id = aws_api_gateway_rest_api.visitor_counter.id
+
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_rest_api.visitor_counter,
+      aws_api_gateway_resource.visitor_counter,
+
+      aws_api_gateway_method.visitor_counter_post,
+      aws_api_gateway_integration.visitor_counter_post,
+      
+      aws_api_gateway_method.visitor_counter_options,
+      aws_api_gateway_integration.visitor_counter_options,
+      aws_api_gateway_integration_response.visitor_counter_options,
+      aws_api_gateway_method_response.visitor_counter_options
+    ]))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_stage" "visitor_counter_prod" {
