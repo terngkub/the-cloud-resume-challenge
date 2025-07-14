@@ -229,7 +229,6 @@ resource "aws_s3_bucket_versioning" "crc" {
   }
 }
 
-# TODO do I really need this?
 resource "aws_s3_object" "visitor_counter" {
   bucket = aws_s3_bucket.crc.id
   key    = var.lambda_file_name
@@ -251,10 +250,6 @@ resource "aws_lambda_function" "visitor_counter" {
 }
 
 # API Gateway
-
-locals {
-  api_allow_origin = "https://${var.full_domain_name}"
-}
 
 resource "aws_api_gateway_rest_api" "visitor_counter" {
   name = local.api_gateway_name
