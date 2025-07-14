@@ -51,6 +51,12 @@ variable lambda_file_name {
 
 # API Gateway
 
+variable api_stage_name {
+    description = "API Gateway stage"
+    type = string
+    default = "api"
+}
+
 variable api_path {
     description = "API Gateway path to increase visitor counter"
     type = string

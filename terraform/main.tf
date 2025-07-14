@@ -30,7 +30,7 @@ data "aws_cloudfront_cache_policy" "caching_disabled" {
 }
 
 locals {
-  api_gateway_origin_id = replace(aws_api_gateway_stage.visitor_counter_prod.invoke_url, "/^https?://([^/]*).*/", "$1")
+  api_gateway_origin_id = replace(aws_api_gateway_stage.visitor_counter.invoke_url, "/^https?://([^/]*).*/", "$1")
 }
 
 data "aws_acm_certificate" "resume_website" {
@@ -105,7 +105,7 @@ resource "aws_cloudfront_distribution" "resume_website" {
   }
 
   ordered_cache_behavior {
-    path_pattern = "/${aws_api_gateway_stage.visitor_counter_prod.stage_name}/*"
+    path_pattern = "/${aws_api_gateway_stage.visitor_counter.stage_name}/*"
     target_origin_id = local.api_gateway_origin_id
     compress = true
     viewer_protocol_policy = "redirect-to-https"
@@ -370,8 +370,8 @@ resource "aws_api_gateway_deployment" "visitor_counter" {
   }
 }
 
-resource "aws_api_gateway_stage" "visitor_counter_prod" {
+resource "aws_api_gateway_stage" "visitor_counter" {
   rest_api_id   = aws_api_gateway_rest_api.visitor_counter.id
   deployment_id = aws_api_gateway_deployment.visitor_counter.id
-  stage_name    = "prod"
+  stage_name    = var.api_stage_name
 }
