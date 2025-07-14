@@ -49,6 +49,11 @@ variable lambda_file_name {
     default = "visitor_counter.zip"
 }
 
+variable lambda_s3_bucket_name {
+    description = "S3 bucket name for Lambda code"
+    type = string
+}
+
 # API Gateway
 
 variable api_stage_name {

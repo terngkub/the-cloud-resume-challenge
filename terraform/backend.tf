@@ -66,7 +66,7 @@ resource "aws_lambda_function" "visitor_counter" {
 ################################################################################
 
 resource "aws_s3_bucket" "crc" {
-  bucket = "nattapol-crc"
+  bucket = var.lambda_s3_bucket_name
 }
 
 resource "aws_s3_bucket_versioning" "crc" {
