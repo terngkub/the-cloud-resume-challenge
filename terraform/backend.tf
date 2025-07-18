@@ -47,6 +47,7 @@ resource "aws_dynamodb_table_item" "visitor_counter" {
 ################################################################################
 
 resource "aws_lambda_function" "visitor_counter" {
+  depends_on = [  ]
   function_name = local.backend_name
   role          = aws_iam_role.lambda_visitor_counter.arn
   s3_bucket     = aws_s3_bucket.crc.id
@@ -57,6 +58,7 @@ resource "aws_lambda_function" "visitor_counter" {
   environment {
     variables = {
       DYNAMODB_TABLE_NAME = aws_dynamodb_table.visitor_counter.name
+      FULL_DOMAIN_NAME = var.full_domain_name
     }
   }
 }
@@ -79,9 +81,18 @@ resource "aws_s3_bucket_versioning" "crc" {
 resource "aws_s3_object" "visitor_counter" {
   bucket = aws_s3_bucket.crc.id
   key    = var.lambda_file_name
+
+  # Initialize with a provided code zipfile first
+  # There is no need to concern about the code content, we just need a zip file
+  source = "./${var.lambda_file_name}"
+
+  # Then, ignore the upate from GitHub Actions
+  lifecycle {
+    ignore_changes = [ source, etag ]
+  }
 } 
 
-# Permissions
+# IAM Role that Lambda function uses
 ################################################################################
 
 data "aws_iam_policy_document" "lambda_assume_role" {
@@ -143,6 +154,45 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
       }
     ]
   })
+}
+
+# IAM Role Policy for GitHub Actions to update the Lambda function
+################################################################################
+
+data "aws_iam_policy_document" "github_actions_lambda" {
+    statement {
+        effect = "Allow"
+
+        actions = [
+            "s3:PutObject",
+            "s3:GetObject",
+            "s3:ListBucket"
+        ]
+
+        resources = [
+            "arn:aws:s3:::${var.lambda_s3_bucket_name}",
+            "arn:aws:s3:::${var.lambda_s3_bucket_name}/*"
+        ]
+    }
+
+    statement {
+        effect = "Allow"
+
+        actions = [
+            "lambda:UpdateFunctionCode",
+            "lambda:GetFunction"
+        ]
+
+        resources = [
+            "arn:aws:lambda:${data.aws_region.current.region}.${data.aws_caller_identity.current.account_id}"
+        ]
+    }
+}
+
+resource "aws_iam_role_policy" "github_actions_lambda" {
+  name = "GitHubActionsLambda"
+  role = aws_iam_role.github_actions.name
+  policy = data.aws_iam_policy_document.github_actions_lambda.json
 }
 
 

@@ -11,9 +11,6 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "nattapol-crc-prod-terraform"
-    key    = "terraform.tfstate"
-    region = "ap-southeast-7"
   }
 
   required_version = ">= 1.2.0"

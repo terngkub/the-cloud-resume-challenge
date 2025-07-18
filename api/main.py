@@ -20,6 +20,8 @@ def lambda_handler(event, context):
     )
     return {
         "statusCode": 200,
-        "headers": {"Access-Control-Allow-Origin": "https://resume.nattapol.com"},
+        "headers": {
+            "Access-Control-Allow-Origin": f'https://{os.environ.get("FULL_DOMAIN_NAME")}'
+        },
         "body": response_body,
     }

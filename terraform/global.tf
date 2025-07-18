@@ -109,3 +109,42 @@ resource "aws_cloudfront_distribution" "resume_website" {
     cached_methods = ["GET", "HEAD"]
   }
 }
+
+
+################################################################################
+# GitHub Actions IAM Role
+################################################################################
+
+data "aws_iam_policy_document" "github_actions_assume" {
+    statement {
+        effect = "Allow"
+
+        principals {
+          type = "Federated"
+          identifiers = [aws_iam_openid_connect_provider.github_actions.arn]
+        }
+
+        actions = ["sts:AssumeRoleWithWebIdentity"]
+
+        condition {
+            test = "StringEquals"
+            variable = "token.actions.githubusercontent.com:aud"
+            values = ["sts.amazonaws.com"]
+        }
+        condition {
+            test = "StringLike"
+            variable = "token.actions.githubusercontent.com:sub"
+            values = ["repo:terngkub/the-cloud-resume-challenge:*"]
+        }
+    }
+}
+
+resource "aws_iam_role" "github_actions" {
+    name = "crc-github-actions-role"
+    assume_role_policy = data.aws_iam_policy_document.github_actions_assume.json
+}
+
+resource "aws_iam_openid_connect_provider" "github_actions" {
+  url = "https://token.actions.githubusercontent.com"
+  client_id_list = ["sts.amazonaws.com"]
+}
