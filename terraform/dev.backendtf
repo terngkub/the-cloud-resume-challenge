@@ -1,3 +1,0 @@
-bucket = "nattapol-crc-dev-terraform"
-key    = "terraform.tfstate"
-region = "ap-southeast-7"
