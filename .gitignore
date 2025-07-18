@@ -5,6 +5,3 @@
 *.tfstate
 *.tfstate.*
 tf.plan
-
-# Zip
-*.zip
