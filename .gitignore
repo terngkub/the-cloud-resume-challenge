@@ -9,3 +9,4 @@ tf.plan
 # Python
 .env
 __pycache__
+.pytest_cache
