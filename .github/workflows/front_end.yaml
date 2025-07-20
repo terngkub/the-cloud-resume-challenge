@@ -8,7 +8,7 @@ permissions:
   id-token: write
   contents: read
 jobs:
-  Deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -20,5 +20,9 @@ jobs:
           aws-region: ap-southeast-7
       - name: Sync files to S3
         run: aws s3 sync website s3://resume.nattapol.com --delete
+  test:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
       - name: Smoke Test
         uses: ./.github/workflows/test.yaml
