@@ -33,3 +33,5 @@ jobs:
         run: aws s3 cp ${{ env.LAMBDA_ZIP_FILE_NAME }} s3://${{ env.LAMBDA_S3_BUCKET_NAME }}
       - name: Updata Lambda
         run: aws lambda update-function-code --function-name ${{ env.LAMBDA_FUNCTION_NAME}} --s3-bucket ${{ env.LAMBDA_S3_BUCKET_NAME }} --s3-key ${{ env.LAMBDA_ZIP_FILE_NAME }} --publish
+      - name: Smoke Test
+        uses: ./.github/workflows/test.yaml

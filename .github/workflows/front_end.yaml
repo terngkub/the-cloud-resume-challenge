@@ -20,3 +20,5 @@ jobs:
           aws-region: ap-southeast-7
       - name: Sync files to S3
         run: aws s3 sync website s3://resume.nattapol.com --delete
+      - name: Smoke Test
+        uses: ./.github/workflows/test.yaml
