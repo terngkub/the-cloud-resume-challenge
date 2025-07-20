@@ -5,3 +5,7 @@
 *.tfstate
 *.tfstate.*
 tf.plan
+
+# Python
+.env
+__pycache__
