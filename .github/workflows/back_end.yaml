@@ -38,4 +38,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Smoke Test
-        uses: ./.github/workflows/test.yaml
+        uses: ./.github/workflows/smoke_test.yaml
