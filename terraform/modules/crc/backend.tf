@@ -184,7 +184,7 @@ data "aws_iam_policy_document" "github_actions_lambda" {
         ]
 
         resources = [
-            "arn:aws:lambda:${data.aws_region.current.region}.${data.aws_caller_identity.current.account_id}"
+            "arn:aws:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:${local.backend_name}"
         ]
     }
 }
