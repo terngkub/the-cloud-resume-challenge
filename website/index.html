@@ -1,11 +1,30 @@
 <html>
     <head>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <meta charset="UTF-8">
+        <link href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <div id="visitor-counter"><p>Visitor Counter: <span id="visitor-counter-value"></span></p></div>
+        <div class="website-header">
+            <div class="logo">
+                <a href="https://nattapol.com">nattapol.com</a>
+            </div>
+            <div class="website-header-inner">
+                <p class="website-header-text">Welcome to my serverless resume from the <a href="https://cloudresumechallenge.dev/docs/the-challenge/aws/" target="_blank">Cloud Resume Challenge</a> </p>
+                <p class="website-header-text">Built with AWS (S3, API Gateway), Terraform, and GitHub Actions.</p>
+            </div>
+            <div class="menu-bar">
+                <div class="left">
+                    <div><a href="https://nattapol.com" target="_blank"><i class="icon-file-text"></i> Project Details</a></div>
+                    <div><a href="https://github.com/terngkub/the-cloud-resume-challenge" target="_blank"><i class="icon-github"></i> GitHub Repository</a></div>
+                    <div><a href=""><i class="icon-cloud-download"></i> Download Resume PDF</a></div>
+                </div>
+                <div class="right">
+                    <p>Page View: <span id="visitor-counter-value">N/A</span></p>
+                </div>
+            </div>
+        </div>
+
         <div id="resume">
 
 

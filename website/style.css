@@ -1,9 +1,61 @@
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Arial', sans-serif;
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
 }
+
+/* Website header */
+
+.website-header {
+    background-color: rgb(50, 50, 50);
+    color: rgb(220, 220, 220);
+    margin: 0;
+    padding: 1rem 0;
+}
+
+.website-header a {
+    text-decoration: none;
+    color: rgb(90, 180, 90);
+}
+
+/* Logo */
+
+.logo {
+    max-width: 1140px;
+    margin: auto;
+    font-size: 2rem;
+}
+
+/* Website Header Text */
+
+.website-header-inner {
+    max-width: 1140px;
+    margin: 1.5rem auto;
+    font-size: 1.2rem;
+}
+
+/* Menu Bar */
+
+.menu-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1140px;
+    margin: auto;
+}
+
+.menu-bar .left {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+/* Resume */
+
 #resume {
     max-width: 21cm;
-    margin: auto;
+    margin: 2rem auto;
     border-style: solid;
     border-width: 1px;
     padding: 0.5cm 1cm;
