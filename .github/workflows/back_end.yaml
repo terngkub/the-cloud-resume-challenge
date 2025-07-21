@@ -10,29 +10,26 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-        LAMBDA_S3_BUCKET_NAME: nattapol-crc-prod-lambda
-        LAMBDA_ZIP_FILE_NAME: visitor_counter.zip
-        LAMBDA_FUNCTION_NAME: crc-prod-visitor-counter
+    environment: prod
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Zip files
         run: |
           cd api
-          zip -r ../${{ env.LAMBDA_ZIP_FILE_NAME }} *
+          zip -r ../${{ vars.LAMBDA_ZIP_FILE_NAME }} *
           cd ..
       - name: List file
         run: ls -la
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::728980333345:role/crc-github-actions-role
+          role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE }}
           aws-region: ap-southeast-7
       - name: Sync files to S3
-        run: aws s3 cp ${{ env.LAMBDA_ZIP_FILE_NAME }} s3://${{ env.LAMBDA_S3_BUCKET_NAME }}
+        run: aws s3 cp ${{ vars.LAMBDA_ZIP_FILE_NAME }} s3://${{ vars.LAMBDA_S3_BUCKET_NAME }}
       - name: Updata Lambda
-        run: aws lambda update-function-code --function-name ${{ env.LAMBDA_FUNCTION_NAME}} --s3-bucket ${{ env.LAMBDA_S3_BUCKET_NAME }} --s3-key ${{ env.LAMBDA_ZIP_FILE_NAME }} --publish
+        run: aws lambda update-function-code --function-name ${{ vars.LAMBDA_FUNCTION_NAME}} --s3-bucket ${{ vars.LAMBDA_S3_BUCKET_NAME }} --s3-key ${{ vars.LAMBDA_ZIP_FILE_NAME }} --publish
   smoke_test:
     needs: deploy
     uses: ./.github/workflows/smoke_test.yaml
