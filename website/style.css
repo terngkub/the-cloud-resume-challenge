@@ -1,0 +1,53 @@
+body {
+    font-family: 'Inter', sans-serif;
+}
+#resume {
+    max-width: 21cm;
+    margin: auto;
+    border-style: solid;
+    border-width: 1px;
+    padding: 0.5cm 1cm;
+}
+
+#header {
+    text-align: center;
+}
+#header h1 {
+    font-size: 2rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+#header p {
+    font-size: 1rem;
+}
+
+h1 {
+    font-size: 1.5rem;
+    font-weight: lighter;
+}
+h2 {
+    font-size: 1.25rem;
+}
+
+.job {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+.job h2,p {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.left-right {
+    display: flex;
+    justify-content: space-between;
+}
+.company-position {
+    color: rgb(80, 80, 80);
+    margin: 0px;
+    font-size: 1rem
+
+}
+.diploma .left {
+    font-weight: bold;
+}
