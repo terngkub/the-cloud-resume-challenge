@@ -75,3 +75,22 @@ resource "aws_iam_role_policy" "github_actions_website" {
   role = aws_iam_role.github_actions.name
   policy = data.aws_iam_policy_document.github_actions_website.json
 }
+
+data "aws_iam_policy_document" "github_actions_cloudfront" {
+    statement {
+        effect = "Allow"
+
+        actions = [
+            "cloudfront:CreateInvalidation",
+            "cloudfront:GetInvalidation"
+        ]
+
+        resources = [aws_cloudfront_distribution.resume_website.arn]
+    }
+}
+
+resource "aws_iam_role_policy" "github_actions_cloudfront" {
+  name = "GitHubActionsCloudFront"
+  role = aws_iam_role.github_actions.name
+  policy = data.aws_iam_policy_document.github_actions_cloudfront.json
+}
